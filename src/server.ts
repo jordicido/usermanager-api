@@ -11,6 +11,14 @@ app.get("/", (req, res) => {
   });
 });
 
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    message: "UserManager API funcionando",
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en http://localhost:${PORT}`);
 });
