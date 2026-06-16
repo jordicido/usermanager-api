@@ -3,6 +3,46 @@ import express from "express";
 const app = express();
 const PORT = 3000;
 
+type User = {
+  id: number;
+  name: string;
+  email: string;
+  role: "USER" | "ADMIN";
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+const users: User[] = [
+  {
+    id: 1,
+    name: "Ana García",
+    email: "ana@email.com",
+    role: "USER",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 2,
+    name: "Carlos Pérez",
+    email: "carlos@email.com",
+    role: "ADMIN",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 3,
+    name: "Laura Martínez",
+    email: "laura@email.com",
+    role: "USER",
+    isActive: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
 app.use(express.json());
 
 // Ruta base de la API
@@ -25,16 +65,44 @@ app.get("/api/health", (req, res) => {
 app.get("/api/users", (req, res) => {
   res.status(200).json({
     message: "Listado de usuarios",
-    data: []
+    total: users.length,
+    data: users
+  });
+});
+
+app.get("/api/users/active", (req, res) => {
+  const activeUsers = users.filter((user) => user.isActive);
+
+  res.status(200).json({
+    message: "Listado de usuarios activos",
+    total: activeUsers.length,
+    data: activeUsers
   });
 });
 
 app.get("/api/users/:id", (req, res) => {
-  const { id } = req.params;
+  const idParam = req.params.id;
+  const id = Number(idParam);
 
-  res.status(200).json({
-    message: "Detalle de usuario",
-    id: id
+  if (Number.isNaN(id)) {
+    return res.status(400).json({
+      error: "El ID debe ser un número",
+      received: idParam
+    });
+  }
+
+  const user = users.find((user) => user.id === id);
+
+  if (!user) {
+    return res.status(404).json({
+      error: "Usuario no encontrado",
+      id
+    });
+  }
+
+  return res.status(200).json({
+    message: "Usuario encontrado",
+    data: user
   });
 });
 

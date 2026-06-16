@@ -133,3 +133,18 @@ Content-Type: application/json
   "email": "modificado@email.com",
   "isActive": false
 }
+
+### Dia 8 - Consultar usuario existente 1
+GET {{baseUrl}}/api/users/1
+
+### Dia 8 - Consultar usuario existente 2
+GET {{baseUrl}}/api/users/2
+
+### Dia 8 - Consultar usuario inexistente
+GET {{baseUrl}}/api/users/999
+
+### Dia 8 - Consultar usuario con ID no valido
+GET {{baseUrl}}/api/users/abc
+
+### Dia 8 - Consultar usuarios activos
+GET {{baseUrl}}/api/users/active

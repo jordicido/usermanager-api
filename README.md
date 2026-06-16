@@ -62,8 +62,9 @@ Respuesta esperada:
 
 ### Usuarios
 
-Endpoints temporales creados para practicar métodos HTTP. Todavía no usan base
-de datos; devuelven respuestas simuladas.
+Endpoints temporales creados para practicar métodos HTTP. El listado de
+usuarios ya devuelve datos cargados en memoria; el resto de rutas siguen siendo
+simuladas.
 
 #### Listar usuarios
 
@@ -76,9 +77,22 @@ Respuesta esperada:
 ```json
 {
   "message": "Listado de usuarios",
-  "data": []
+  "total": 3,
+  "data": [
+    {
+      "id": 1,
+      "name": "Ana García",
+      "email": "ana@email.com",
+      "role": "USER",
+      "isActive": true,
+      "createdAt": "2026-01-01T10:00:00.000Z",
+      "updatedAt": "2026-01-01T10:00:00.000Z"
+    }
+  ]
 }
 ```
+
+Las fechas pueden cambiar porque se generan al arrancar el servidor.
 
 #### Ver detalle de usuario
 
@@ -96,8 +110,58 @@ Respuesta esperada:
 
 ```json
 {
-  "message": "Detalle de usuario",
-  "id": "1"
+  "message": "Usuario encontrado",
+  "data": {
+    "id": 1,
+    "name": "Ana García",
+    "email": "ana@email.com",
+    "role": "USER",
+    "isActive": true,
+    "createdAt": "2026-01-01T10:00:00.000Z",
+    "updatedAt": "2026-01-01T10:00:00.000Z"
+  }
+}
+```
+
+Posibles errores:
+
+```json
+{
+  "error": "El ID debe ser un número",
+  "received": "abc"
+}
+```
+
+```json
+{
+  "error": "Usuario no encontrado",
+  "id": 999
+}
+```
+
+#### Listar usuarios activos
+
+```http
+GET /api/users/active
+```
+
+Respuesta esperada:
+
+```json
+{
+  "message": "Listado de usuarios activos",
+  "total": 2,
+  "data": [
+    {
+      "id": 1,
+      "name": "Ana García",
+      "email": "ana@email.com",
+      "role": "USER",
+      "isActive": true,
+      "createdAt": "2026-01-01T10:00:00.000Z",
+      "updatedAt": "2026-01-01T10:00:00.000Z"
+    }
+  ]
 }
 ```
 
@@ -269,3 +333,5 @@ Body de ejemplo:
 - [Día 4 - Métodos HTTP](docs/dia_04_metodos_http.md)
 - [Día 5 - JSON, body, params y headers](docs/dia_05_json_body_params_headers.md)
 - [Día 6 - Cliente HTTP y depuración](docs/dia_06_cliente_http_depuracion.md)
+- [Día 7 - Listado de usuarios en memoria](docs/dia_07_listado_usuarios.md)
+- [Día 8 - Consultar usuario por ID](docs/dia_08_consultar_usuario_id.md)
