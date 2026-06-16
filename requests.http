@@ -1,34 +1,135 @@
 @baseUrl = http://localhost:3000
 
-### Inicio
+### Dia 2 - Inicio
 GET {{baseUrl}}/
 
-### Health check
+### Dia 3 - Health check
 GET {{baseUrl}}/api/health
 
-### Listar usuarios
+### Dia 4 - Listar usuarios
 GET {{baseUrl}}/api/users
 
-### Ver detalle de usuario
+### Dia 4 - Ver detalle de usuario
 GET {{baseUrl}}/api/users/1
 
-### Crear usuario
+### Dia 4 - Crear usuario
 POST {{baseUrl}}/api/users
 Content-Type: application/json
 
 {
-  "name": "Laura Martínez",
+  "name": "Laura Martinez",
   "email": "laura@email.com",
   "password": "123456"
 }
 
-### Actualizar usuario
+### Dia 4 - Actualizar usuario
 PATCH {{baseUrl}}/api/users/1
 Content-Type: application/json
 
 {
-  "name": "Laura García"
+  "name": "Laura Garcia"
 }
 
-### Eliminar o desactivar usuario
+### Dia 4 - Eliminar o desactivar usuario
 DELETE {{baseUrl}}/api/users/1
+
+### Dia 5 - Probar body
+POST {{baseUrl}}/api/debug/body
+Content-Type: application/json
+
+{
+  "name": "Ana Garcia",
+  "email": "ana@email.com"
+}
+
+### Dia 5 - Probar params
+GET {{baseUrl}}/api/debug/params/25
+
+### Dia 5 - Probar query params
+GET {{baseUrl}}/api/debug/query?role=ADMIN&isActive=true
+
+### Dia 5 - Probar headers
+GET {{baseUrl}}/api/debug/headers
+Authorization: Bearer token-de-prueba
+
+### Dia 5 - Probar params, query, headers y body
+PATCH {{baseUrl}}/api/debug/users/7?notify=true
+Authorization: Bearer token-de-prueba
+Content-Type: application/json
+
+{
+  "name": "Nombre actualizado"
+}
+
+### Dia 6 - Inicio desde cliente HTTP
+GET {{baseUrl}}/
+
+### Dia 6 - Health desde cliente HTTP
+GET {{baseUrl}}/api/health
+
+### Dia 6 - Listado desde cliente HTTP
+GET {{baseUrl}}/api/users
+
+### Dia 6 - Detalle desde cliente HTTP
+GET {{baseUrl}}/api/users/1
+
+### Dia 6 - Crear usuario con body JSON
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Ana Garcia",
+  "email": "ana@email.com",
+  "password": "123456"
+}
+
+### Dia 6 - Actualizar usuario con params y body
+PATCH {{baseUrl}}/api/users/1
+Content-Type: application/json
+
+{
+  "name": "Ana Actualizada"
+}
+
+### Dia 6 - Request completa de depuracion
+POST {{baseUrl}}/api/debug/request?source=thunder
+x-client-name: thunder-client
+Content-Type: application/json
+
+{
+  "example": "datos de prueba"
+}
+
+### Dia 6 - Error de ruta inexistente
+GET {{baseUrl}}/api/ruta-inventada
+
+### Dia 6 - Error de metodo incorrecto
+POST {{baseUrl}}/api/health
+
+### Dia 6 - Error de JSON mal formado
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Ana",
+  "email": "ana@email.com",
+}
+
+### Dia 6 - Header personalizado
+POST {{baseUrl}}/api/debug/request
+x-student-name: Jordi
+Content-Type: application/json
+
+{
+  "message": "Probando headers personalizados"
+}
+
+### Dia 6 - Actualizacion completa
+PATCH {{baseUrl}}/api/users/5
+Content-Type: application/json
+
+{
+  "name": "Usuario Modificado",
+  "email": "modificado@email.com",
+  "isActive": false
+}

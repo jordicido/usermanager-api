@@ -183,9 +183,89 @@ Respuesta esperada:
 }
 ```
 
+### Rutas temporales de debug
+
+Rutas creadas para practicar cómo leer datos de una petición HTTP desde
+Express. No forman parte de la API final.
+
+```http
+POST /api/debug/body
+GET /api/debug/params/:id
+GET /api/debug/query
+GET /api/debug/headers
+PATCH /api/debug/users/:id
+POST /api/debug/request
+```
+
+#### Probar body
+
+```http
+POST /api/debug/body
+```
+
+Body de ejemplo:
+
+```json
+{
+  "name": "Ana Garcia",
+  "email": "ana@email.com"
+}
+```
+
+#### Probar params
+
+```http
+GET /api/debug/params/25
+```
+
+#### Probar query params
+
+```http
+GET /api/debug/query?role=ADMIN&isActive=true
+```
+
+#### Probar headers
+
+```http
+GET /api/debug/headers
+Authorization: Bearer token-de-prueba
+```
+
+#### Probar datos combinados
+
+```http
+PATCH /api/debug/users/7?notify=true
+Authorization: Bearer token-de-prueba
+```
+
+Body de ejemplo:
+
+```json
+{
+  "name": "Nombre actualizado"
+}
+```
+
+#### Probar request completa
+
+```http
+POST /api/debug/request?source=thunder
+x-client-name: thunder-client
+```
+
+Body de ejemplo:
+
+```json
+{
+  "example": "datos de prueba"
+}
+```
+
 ## Documentación del reto
 
 - [Día 1 - Diseño inicial](docs/dia_01_diseno_inicial.md)
 - [Día 2 - Preparación del proyecto](docs/dia_02_preparacion_proyecto.md)
 - [Día 3 - Primer endpoint](docs/dia_03_primer_endpoint.md)
 - [Día 4 - Métodos HTTP](docs/dia_04_metodos_http.md)
+- [Día 5 - JSON, body, params y headers](docs/dia_05_json_body_params_headers.md)
+- [Día 6 - Cliente HTTP y depuración](docs/dia_06_cliente_http_depuracion.md)
