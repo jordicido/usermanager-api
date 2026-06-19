@@ -62,9 +62,9 @@ Respuesta esperada:
 
 ### Usuarios
 
-Endpoints temporales creados para practicar métodos HTTP. El listado de
-usuarios ya devuelve datos cargados en memoria; el resto de rutas siguen siendo
-simuladas.
+Endpoints creados para practicar métodos HTTP. El listado, el detalle, la
+creación, la actualización y la desactivación de usuarios ya trabajan con datos
+cargados en memoria.
 
 #### Listar usuarios
 
@@ -175,8 +175,8 @@ Body de ejemplo:
 
 ```json
 {
-  "name": "Laura Martínez",
-  "email": "laura@email.com",
+  "name": "María López",
+  "email": "maria@email.com",
   "password": "123456"
 }
 ```
@@ -185,20 +185,55 @@ Respuesta esperada:
 
 ```json
 {
-  "message": "Usuario recibido para crear",
+  "message": "Usuario creado correctamente",
   "data": {
-    "name": "Laura Martínez",
-    "email": "laura@email.com",
-    "password": "123456"
+    "id": 4,
+    "name": "María López",
+    "email": "maria@email.com",
+    "role": "USER",
+    "isActive": true,
+    "createdAt": "2026-01-01T10:00:00.000Z",
+    "updatedAt": "2026-01-01T10:00:00.000Z"
   }
 }
 ```
+
+La respuesta usa el código `201 Created`. El usuario se añade al array
+`users`, por lo que aparecerá en las siguientes consultas mientras el servidor
+continúe encendido. La contraseña recibida se valida, pero no se guarda ni se
+devuelve.
+
+Posibles errores:
+
+```json
+{
+  "error": "name, email y password son obligatorios"
+}
+```
+
+```json
+{
+  "error": "La contraseña debe tener al menos 6 caracteres"
+}
+```
+
+```json
+{
+  "error": "El email ya está registrado"
+}
+```
+
+Los datos incompletos o una contraseña corta devuelven `400 Bad Request`. Un
+email ya registrado devuelve `409 Conflict`.
 
 #### Actualizar usuario
 
 ```http
 PATCH /api/users/:id
 ```
+
+Permite modificar parcialmente un usuario existente. Los campos admitidos son
+`name`, `email` e `isActive`; los demás campos se mantienen sin cambios.
 
 Ejemplo:
 
@@ -210,7 +245,7 @@ Body de ejemplo:
 
 ```json
 {
-  "name": "Laura García"
+  "name": "Ana Martínez"
 }
 ```
 
@@ -218,19 +253,81 @@ Respuesta esperada:
 
 ```json
 {
-  "message": "Usuario recibido para actualizar",
-  "id": "1",
-  "changes": {
-    "name": "Laura García"
+  "message": "Usuario actualizado correctamente",
+  "data": {
+    "id": 1,
+    "name": "Ana Martínez",
+    "email": "ana@email.com",
+    "role": "USER",
+    "isActive": true,
+    "createdAt": "2026-01-01T10:00:00.000Z",
+    "updatedAt": "2026-01-01T11:00:00.000Z"
   }
 }
 ```
+
+La API localiza el usuario, conserva los campos que no se han enviado y
+actualiza automáticamente `updatedAt`.
+
+Posibles errores:
+
+```json
+{
+  "error": "El ID debe ser un número",
+  "received": "abc"
+}
+```
+
+```json
+{
+  "error": "Usuario no encontrado",
+  "id": 999
+}
+```
+
+```json
+{
+  "error": "Debes enviar al menos un campo para actualizar"
+}
+```
+
+```json
+{
+  "error": "El nombre no puede estar vacío"
+}
+```
+
+```json
+{
+  "error": "El email no tiene un formato válido"
+}
+```
+
+```json
+{
+  "error": "El email ya está registrado"
+}
+```
+
+```json
+{
+  "error": "isActive debe ser true o false"
+}
+```
+
+Los datos incorrectos devuelven `400 Bad Request`, un usuario inexistente
+devuelve `404 Not Found` y un email utilizado por otro usuario devuelve
+`409 Conflict`.
 
 #### Eliminar o desactivar usuario
 
 ```http
 DELETE /api/users/:id
 ```
+
+Esta ruta aplica un borrado lógico: el usuario no se elimina del array, sino que
+se conserva con `isActive: false`. También se actualiza automáticamente
+`updatedAt`.
 
 Ejemplo:
 
@@ -242,10 +339,40 @@ Respuesta esperada:
 
 ```json
 {
-  "message": "Usuario recibido para eliminar o desactivar",
-  "id": "1"
+  "message": "Usuario desactivado correctamente",
+  "data": {
+    "id": 1,
+    "name": "Ana García",
+    "email": "ana@email.com",
+    "role": "USER",
+    "isActive": false,
+    "createdAt": "2026-01-01T10:00:00.000Z",
+    "updatedAt": "2026-01-01T12:00:00.000Z"
+  }
 }
 ```
+
+El usuario sigue apareciendo en `GET /api/users` y se puede consultar por ID,
+pero deja de aparecer en `GET /api/users/active`.
+
+Posibles errores:
+
+```json
+{
+  "error": "El ID debe ser un número",
+  "received": "abc"
+}
+```
+
+```json
+{
+  "error": "Usuario no encontrado",
+  "id": 999
+}
+```
+
+Un ID incorrecto devuelve `400 Bad Request` y un usuario inexistente devuelve
+`404 Not Found`.
 
 ### Rutas temporales de debug
 
@@ -335,3 +462,6 @@ Body de ejemplo:
 - [Día 6 - Cliente HTTP y depuración](docs/dia_06_cliente_http_depuracion.md)
 - [Día 7 - Listado de usuarios en memoria](docs/dia_07_listado_usuarios.md)
 - [Día 8 - Consultar usuario por ID](docs/dia_08_consultar_usuario_id.md)
+- [Día 9 - Crear usuarios en memoria](docs/dia_09_crear_usuarios.md)
+- [Día 10 - Actualizar usuarios en memoria](docs/dia_10_actualizar_usuarios.md)
+- [Día 11 - Eliminar o desactivar usuarios en memoria](docs/dia_11_eliminar_desactivar_usuarios.md)

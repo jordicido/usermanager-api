@@ -148,3 +148,130 @@ GET {{baseUrl}}/api/users/abc
 
 ### Dia 8 - Consultar usuarios activos
 GET {{baseUrl}}/api/users/active
+
+### Dia 9 - Crear usuario correctamente
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Maria Lopez",
+  "email": "maria@email.com",
+  "password": "123456"
+}
+
+### Dia 9 - Crear usuario con campos incompletos
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Usuario incompleto"
+}
+
+### Dia 9 - Crear usuario con password corta
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Usuario Prueba",
+  "email": "prueba@email.com",
+  "password": "123"
+}
+
+### Dia 9 - Crear usuario con email duplicado
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Ana Repetida",
+  "email": "ana@email.com",
+  "password": "123456"
+}
+
+### Dia 9 - Comprobar el listado despues de crear
+GET {{baseUrl}}/api/users
+
+### Dia 10 - Actualizar usuario correctamente
+PATCH {{baseUrl}}/api/users/1
+Content-Type: application/json
+
+{
+  "name": "Ana Martinez"
+}
+
+### Dia 10 - Actualizar usuario con ID no valido
+PATCH {{baseUrl}}/api/users/abc
+Content-Type: application/json
+
+{
+  "name": "Nombre actualizado"
+}
+
+### Dia 10 - Actualizar usuario inexistente
+PATCH {{baseUrl}}/api/users/999
+Content-Type: application/json
+
+{
+  "name": "Usuario inexistente"
+}
+
+### Dia 10 - Actualizar usuario con body vacio
+PATCH {{baseUrl}}/api/users/1
+Content-Type: application/json
+
+{}
+
+### Dia 10 - Actualizar usuario con nombre vacio
+PATCH {{baseUrl}}/api/users/1
+Content-Type: application/json
+
+{
+  "name": "   "
+}
+
+### Dia 10 - Actualizar usuario con email invalido
+PATCH {{baseUrl}}/api/users/1
+Content-Type: application/json
+
+{
+  "email": "correo-sin-arroba"
+}
+
+### Dia 10 - Actualizar usuario con email duplicado
+PATCH {{baseUrl}}/api/users/2
+Content-Type: application/json
+
+{
+  "email": "ana@email.com"
+}
+
+### Dia 10 - Actualizar usuario con isActive incorrecto
+PATCH {{baseUrl}}/api/users/1
+Content-Type: application/json
+
+{
+  "isActive": "false"
+}
+
+### Dia 10 - Comprobar usuario actualizado
+GET {{baseUrl}}/api/users/1
+
+### Dia 11 - Desactivar usuario correctamente
+DELETE {{baseUrl}}/api/users/1
+
+### Dia 11 - Desactivar usuario con ID no valido
+DELETE {{baseUrl}}/api/users/abc
+
+### Dia 11 - Desactivar usuario inexistente
+DELETE {{baseUrl}}/api/users/999
+
+### Dia 11 - Desactivar usuario que ya esta inactivo
+DELETE {{baseUrl}}/api/users/3
+
+### Dia 11 - Comprobar usuario desactivado
+GET {{baseUrl}}/api/users/1
+
+### Dia 11 - Comprobar listado despues de desactivar
+GET {{baseUrl}}/api/users
+
+### Dia 11 - Comprobar listado de usuarios activos
+GET {{baseUrl}}/api/users/active
