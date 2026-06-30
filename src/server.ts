@@ -1,4 +1,5 @@
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
+
 
 const app = express();
 const PORT = 3000;
@@ -13,6 +14,17 @@ type User = {
   updatedAt: string;
 };
 
+class AppError extends Error {
+  statusCode: number;
+  details?: unknown;
+
+  constructor(message: string, statusCode: number = 500, details?: unknown) {
+    super(message);
+    this.statusCode = statusCode;
+    this.details = details;
+  }
+}
+
 const users: User[] = [
   {
     id: 1,
@@ -21,7 +33,7 @@ const users: User[] = [
     role: "USER",
     isActive: true,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 2,
@@ -30,7 +42,7 @@ const users: User[] = [
     role: "ADMIN",
     isActive: true,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 3,
@@ -39,16 +51,40 @@ const users: User[] = [
     role: "USER",
     isActive: false,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
+    updatedAt: new Date().toISOString(),
+  },
 ];
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function isBoolean(value: unknown): value is boolean {
+  return typeof value === "boolean";
+}
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function isValidBasicEmail(value: string): boolean {
+  return value.includes("@") && value.includes(".");
+}
+
+function isEmailTaken(email: string, userIdToIgnore?: number): boolean {
+  const normalizedEmail = normalizeEmail(email);
+
+  return users.some(
+    (user) => user.email === normalizedEmail && user.id !== userIdToIgnore
+  );
+}
 
 app.use(express.json());
 
 // Ruta base de la API
 app.get("/", (req, res) => {
   res.json({
-    message: "UserManager API"
+    message: "UserManager API",
   });
 });
 
@@ -57,16 +93,16 @@ app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "ok",
     message: "UserManager API funcionando",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
 // Rutas HTTP básicas de la API
-app.get("/api/users", (req, res) => {
+app.get("/api/users", (req, res, next) => {
   res.status(200).json({
     message: "Listado de usuarios",
     total: users.length,
-    data: users
+    data: users,
   });
 });
 
@@ -76,154 +112,155 @@ app.get("/api/users/active", (req, res) => {
   res.status(200).json({
     message: "Listado de usuarios activos",
     total: activeUsers.length,
-    data: activeUsers
+    data: activeUsers,
   });
 });
 
-app.get("/api/users/:id", (req, res) => {
+app.get("/api/users/:id", (req, res, next) => {
   const idParam = req.params.id;
   const id = Number(idParam);
 
   if (Number.isNaN(id)) {
-    return res.status(400).json({
-      error: "El ID debe ser un número",
-      received: idParam
-    });
+    return next(
+      new AppError("El ID debe ser un número", 400, {
+        received: idParam
+      })
+    );
   }
 
   const user = users.find((user) => user.id === id);
 
   if (!user) {
-    return res.status(404).json({
-      error: "Usuario no encontrado",
-      id
-    });
+    return next(
+      new AppError("Usuario no encontrado", 404, {
+        id
+      })
+    );
   }
 
   return res.status(200).json({
     message: "Usuario encontrado",
-    data: user
+    data: user,
   });
 });
 
-app.post("/api/users", (req, res) => {
+app.post("/api/users", (req, res, next) => {
   const { name, email, password } = req.body;
 
-  if (!name || !email || !password) {
-    return res.status(400).json({
-      error: "name, email y password son obligatorios"
-    });
+  if (!isNonEmptyString(name)) {
+    return next(new AppError("El nombre debe ser un texto no vacío", 400));
   }
 
-  if (password.length < 6) {
-    return res.status(400).json({
-      error: "La contraseña debe tener al menos 6 caracteres"
-    });
+  if (!isNonEmptyString(email)) {
+    return next(new AppError("El email debe ser un texto no vacío", 400));
   }
 
-  const existingUser = users.find((user) => user.email === email);
-
-  if (existingUser) {
-    return res.status(409).json({
-      error: "El email ya está registrado"
-    });
+  if (!isNonEmptyString(password)) {
+    return next(new AppError("La contraseña debe ser un texto no vacío", 400));
   }
 
-  const newId = users.length > 0
-    ? Math.max(...users.map((user) => user.id)) + 1
-    : 1;
+  const cleanName = name.trim();
+  const cleanEmail = normalizeEmail(email);
+  const cleanPassword = password.trim();
+
+  if (cleanPassword.length < 6) {
+    return next(
+      new AppError("La contraseña debe tener al menos 6 caracteres", 400)
+    );
+  }
+
+  if (!isValidBasicEmail(cleanEmail)) {
+    return next(new AppError("El email no tiene un formato válido", 400));
+  }
+
+  if (isEmailTaken(cleanEmail)) {
+    return next(new AppError("El email ya está registrado", 409));
+  }
+
+  const newId =
+    users.length > 0 ? Math.max(...users.map((user) => user.id)) + 1 : 1;
 
   const newUser: User = {
     id: newId,
-    name,
-    email,
+    name: cleanName,
+    email: cleanEmail,
     role: "USER",
     isActive: true,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   };
 
   users.push(newUser);
 
   return res.status(201).json({
     message: "Usuario creado correctamente",
-    data: newUser
+    data: newUser,
   });
 });
 
-app.patch("/api/users/:id", (req, res) => {
+app.patch("/api/users/:id", (req, res, next) => {
   const idParam = req.params.id;
   const id = Number(idParam);
 
   if (Number.isNaN(id)) {
-    return res.status(400).json({
-      error: "El ID debe ser un número",
-      received: idParam
-    });
+    return next(
+      new AppError("El ID debe ser un número", 400, {
+        received: idParam,
+      })
+    );
   }
 
   const userIndex = users.findIndex((user) => user.id === id);
 
   if (userIndex === -1) {
-    return res.status(404).json({
-      error: "Usuario no encontrado",
-      id
-    });
+    return next(
+      new AppError("Usuario no encontrado", 404, {
+        id,
+      })
+    );
   }
 
   const { name, email, isActive } = req.body;
 
   const hasChanges =
-    name !== undefined ||
-    email !== undefined ||
-    isActive !== undefined;
+    name !== undefined || email !== undefined || isActive !== undefined;
 
   if (!hasChanges) {
-    return res.status(400).json({
-      error: "Debes enviar al menos un campo para actualizar"
-    });
+    return next(
+      new AppError("Debes enviar al menos un campo para actualizar", 400)
+    );
   }
 
   let cleanName: string | undefined;
 
   if (name !== undefined) {
-    cleanName = String(name).trim();
-
-    if (cleanName.length === 0) {
-      return res.status(400).json({
-        error: "El nombre no puede estar vacío"
-      });
+    if (!isNonEmptyString(name)) {
+      return next(new AppError("El nombre debe ser un texto no vacío", 400));
     }
-  }
 
+    cleanName = name.trim();
+  }
   let cleanEmail: string | undefined;
 
   if (email !== undefined) {
-    cleanEmail = String(email).trim().toLowerCase();
-
-    if (!cleanEmail.includes("@")) {
-      return res.status(400).json({
-        error: "El email no tiene un formato válido"
-      });
+    if (!isNonEmptyString(email)) {
+      return next(new AppError("El email debe ser un texto no vacío", 400));
     }
 
-    const emailAlreadyExists = users.some(
-      (user) => user.email === cleanEmail && user.id !== id
-    );
+    cleanEmail = normalizeEmail(email);
 
-    if (emailAlreadyExists) {
-      return res.status(409).json({
-        error: "El email ya está registrado"
-      });
+    if (!isValidBasicEmail(cleanEmail)) {
+      return next(new AppError("El email no tiene un formato válido", 400));
+    }
+
+    if (isEmailTaken(cleanEmail, id)) {
+      return next(new AppError("El email ya está registrado", 409));
     }
   }
 
-  if (isActive !== undefined && typeof isActive !== "boolean") {
-    return res.status(400).json({
-      error: "isActive debe ser true o false"
-    });
+  if (isActive !== undefined && !isBoolean(isActive)) {
+    return next(new AppError("isActive debe ser true o false", 400));
   }
-
   const currentUser = users[userIndex];
 
   const updatedUser: User = {
@@ -231,35 +268,37 @@ app.patch("/api/users/:id", (req, res) => {
     name: cleanName ?? currentUser.name,
     email: cleanEmail ?? currentUser.email,
     isActive: isActive ?? currentUser.isActive,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   };
 
   users[userIndex] = updatedUser;
 
   return res.status(200).json({
     message: "Usuario actualizado correctamente",
-    data: updatedUser
+    data: updatedUser,
   });
 });
 
-app.delete("/api/users/:id", (req, res) => {
+app.delete("/api/users/:id", (req, res, next) => {
   const idParam = req.params.id;
   const id = Number(idParam);
 
   if (Number.isNaN(id)) {
-    return res.status(400).json({
-      error: "El ID debe ser un número",
-      received: idParam
-    });
+    return next(
+      new AppError("El ID debe ser un número", 400, {
+        received: idParam,
+      })
+    );
   }
 
   const userIndex = users.findIndex((user) => user.id === id);
 
   if (userIndex === -1) {
-    return res.status(404).json({
-      error: "Usuario no encontrado",
-      id
-    });
+    return next(
+      new AppError("Usuario no encontrado", 404, {
+        id,
+      })
+    );
   }
 
   const currentUser = users[userIndex];
@@ -267,14 +306,14 @@ app.delete("/api/users/:id", (req, res) => {
   const updatedUser: User = {
     ...currentUser,
     isActive: false,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   };
 
   users[userIndex] = updatedUser;
 
   return res.status(200).json({
     message: "Usuario desactivado correctamente",
-    data: updatedUser
+    data: updatedUser,
   });
 });
 
@@ -282,28 +321,28 @@ app.delete("/api/users/:id", (req, res) => {
 app.post("/api/debug/body", (req, res) => {
   res.status(200).json({
     message: "Body recibido correctamente",
-    body: req.body
+    body: req.body,
   });
 });
 
 app.get("/api/debug/params/:id", (req, res) => {
   res.status(200).json({
     message: "Params recibidos correctamente",
-    params: req.params
+    params: req.params,
   });
 });
 
 app.get("/api/debug/query", (req, res) => {
   res.status(200).json({
     message: "Query params recibidos correctamente",
-    query: req.query
+    query: req.query,
   });
 });
 
 app.get("/api/debug/headers", (req, res) => {
   res.status(200).json({
     message: "Headers recibidos correctamente",
-    headers: req.headers
+    headers: req.headers,
   });
 });
 
@@ -318,7 +357,7 @@ app.patch("/api/debug/users/:id", (req, res) => {
     id,
     notify,
     authorization,
-    changes
+    changes,
   });
 });
 
@@ -330,9 +369,39 @@ app.post("/api/debug/request", (req, res) => {
     params: req.params,
     query: req.query,
     headers: req.headers,
-    body: req.body
+    body: req.body,
   });
 });
+
+function notFoundMiddleware(req: Request, res: Response, next: NextFunction) {
+  next(
+    new AppError("Ruta no encontrada", 404, {
+      method: req.method,
+      path: req.originalUrl
+    })
+  );
+}
+
+function errorMiddleware(
+  err: AppError,
+  req: Request,
+  res: Response,
+  _next: NextFunction
+) {
+  const statusCode = err.statusCode || 500;
+
+  return res.status(statusCode).json({
+    error: err.message || "Error interno del servidor",
+    statusCode,
+    details: err.details,
+    path: req.originalUrl,
+    method: req.method,
+    timestamp: new Date().toISOString()
+  });
+}
+
+app.use(notFoundMiddleware);
+app.use(errorMiddleware);
 
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en http://localhost:${PORT}`);

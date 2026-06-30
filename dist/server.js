@@ -14,7 +14,7 @@ const users = [
         role: "USER",
         isActive: true,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
     },
     {
         id: 2,
@@ -23,7 +23,7 @@ const users = [
         role: "ADMIN",
         isActive: true,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
     },
     {
         id: 3,
@@ -32,14 +32,20 @@ const users = [
         role: "USER",
         isActive: false,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    }
+        updatedAt: new Date().toISOString(),
+    },
 ];
+function isNonEmptyString(value) {
+    return typeof value === "string" && value.trim().length > 0;
+}
+function isBoolean(value) {
+    return typeof value === "boolean";
+}
 app.use(express_1.default.json());
 // Ruta base de la API
 app.get("/", (req, res) => {
     res.json({
-        message: "UserManager API"
+        message: "UserManager API",
     });
 });
 // Ruta para ver el estado de la API
@@ -47,7 +53,7 @@ app.get("/api/health", (req, res) => {
     res.status(200).json({
         status: "ok",
         message: "UserManager API funcionando",
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
     });
 });
 // Rutas HTTP básicas de la API
@@ -55,7 +61,7 @@ app.get("/api/users", (req, res) => {
     res.status(200).json({
         message: "Listado de usuarios",
         total: users.length,
-        data: users
+        data: users,
     });
 });
 app.get("/api/users/active", (req, res) => {
@@ -63,7 +69,7 @@ app.get("/api/users/active", (req, res) => {
     res.status(200).json({
         message: "Listado de usuarios activos",
         total: activeUsers.length,
-        data: activeUsers
+        data: activeUsers,
     });
 });
 app.get("/api/users/:id", (req, res) => {
@@ -72,55 +78,71 @@ app.get("/api/users/:id", (req, res) => {
     if (Number.isNaN(id)) {
         return res.status(400).json({
             error: "El ID debe ser un número",
-            received: idParam
+            received: idParam,
         });
     }
     const user = users.find((user) => user.id === id);
     if (!user) {
         return res.status(404).json({
             error: "Usuario no encontrado",
-            id
+            id,
         });
     }
     return res.status(200).json({
         message: "Usuario encontrado",
-        data: user
+        data: user,
     });
 });
 app.post("/api/users", (req, res) => {
     const { name, email, password } = req.body;
-    if (!name || !email || !password) {
+    if (!isNonEmptyString(name)) {
         return res.status(400).json({
-            error: "name, email y password son obligatorios"
+            error: "El nombre debe ser un texto no vacío",
         });
     }
-    if (password.length < 6) {
+    if (!isNonEmptyString(email)) {
         return res.status(400).json({
-            error: "La contraseña debe tener al menos 6 caracteres"
+            error: "El email debe ser un texto no vacío",
         });
     }
-    const existingUser = users.find((user) => user.email === email);
+    if (!isNonEmptyString(password)) {
+        return res.status(400).json({
+            error: "La contraseña debe ser un texto no vacío",
+        });
+    }
+    const cleanName = name.trim();
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+    if (cleanPassword.length < 6) {
+        return res.status(400).json({
+            error: "La contraseña debe tener al menos 6 caracteres",
+        });
+    }
+    if (!cleanEmail.includes("@")) {
+        return res.status(400).json({
+            error: "El email no tiene un formato válido",
+        });
+    }
+    const existingUser = users.find((user) => user.email === cleanEmail);
     if (existingUser) {
         return res.status(409).json({
-            error: "El email ya está registrado"
+            error: "El email ya está registrado",
         });
     }
-    const newId = users.length > 0
-        ? Math.max(...users.map((user) => user.id)) + 1
-        : 1;
+    const newId = users.length > 0 ? Math.max(...users.map((user) => user.id)) + 1 : 1;
     const newUser = {
         id: newId,
-        name,
-        email,
+        name: cleanName,
+        email: cleanEmail,
         role: "USER",
         isActive: true,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
     };
     users.push(newUser);
     return res.status(201).json({
         message: "Usuario creado correctamente",
-        data: newUser
+        data: newUser,
     });
 });
 app.patch("/api/users/:id", (req, res) => {
@@ -129,52 +151,55 @@ app.patch("/api/users/:id", (req, res) => {
     if (Number.isNaN(id)) {
         return res.status(400).json({
             error: "El ID debe ser un número",
-            received: idParam
+            received: idParam,
         });
     }
     const userIndex = users.findIndex((user) => user.id === id);
     if (userIndex === -1) {
         return res.status(404).json({
             error: "Usuario no encontrado",
-            id
+            id,
         });
     }
     const { name, email, isActive } = req.body;
-    const hasChanges = name !== undefined ||
-        email !== undefined ||
-        isActive !== undefined;
+    const hasChanges = name !== undefined || email !== undefined || isActive !== undefined;
     if (!hasChanges) {
         return res.status(400).json({
-            error: "Debes enviar al menos un campo para actualizar"
+            error: "Debes enviar al menos un campo para actualizar",
         });
     }
     let cleanName;
     if (name !== undefined) {
-        cleanName = String(name).trim();
-        if (cleanName.length === 0) {
+        if (!isNonEmptyString(name)) {
             return res.status(400).json({
-                error: "El nombre no puede estar vacío"
+                error: "El nombre debe ser un texto no vacío",
             });
         }
+        cleanName = name.trim();
     }
     let cleanEmail;
     if (email !== undefined) {
-        cleanEmail = String(email).trim().toLowerCase();
+        if (!isNonEmptyString(email)) {
+            return res.status(400).json({
+                error: "El email debe ser un texto no vacío",
+            });
+        }
+        cleanEmail = email.trim().toLowerCase();
         if (!cleanEmail.includes("@")) {
             return res.status(400).json({
-                error: "El email no tiene un formato válido"
+                error: "El email no tiene un formato válido",
             });
         }
         const emailAlreadyExists = users.some((user) => user.email === cleanEmail && user.id !== id);
         if (emailAlreadyExists) {
             return res.status(409).json({
-                error: "El email ya está registrado"
+                error: "El email ya está registrado",
             });
         }
     }
-    if (isActive !== undefined && typeof isActive !== "boolean") {
+    if (isActive !== undefined && !isBoolean(isActive)) {
         return res.status(400).json({
-            error: "isActive debe ser true o false"
+            error: "isActive debe ser true o false",
         });
     }
     const currentUser = users[userIndex];
@@ -183,12 +208,12 @@ app.patch("/api/users/:id", (req, res) => {
         name: cleanName ?? currentUser.name,
         email: cleanEmail ?? currentUser.email,
         isActive: isActive ?? currentUser.isActive,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
     };
     users[userIndex] = updatedUser;
     return res.status(200).json({
         message: "Usuario actualizado correctamente",
-        data: updatedUser
+        data: updatedUser,
     });
 });
 app.delete("/api/users/:id", (req, res) => {
@@ -197,51 +222,51 @@ app.delete("/api/users/:id", (req, res) => {
     if (Number.isNaN(id)) {
         return res.status(400).json({
             error: "El ID debe ser un número",
-            received: idParam
+            received: idParam,
         });
     }
     const userIndex = users.findIndex((user) => user.id === id);
     if (userIndex === -1) {
         return res.status(404).json({
             error: "Usuario no encontrado",
-            id
+            id,
         });
     }
     const currentUser = users[userIndex];
     const updatedUser = {
         ...currentUser,
         isActive: false,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
     };
     users[userIndex] = updatedUser;
     return res.status(200).json({
         message: "Usuario desactivado correctamente",
-        data: updatedUser
+        data: updatedUser,
     });
 });
 // Rutas de pruebas de params, head y body
 app.post("/api/debug/body", (req, res) => {
     res.status(200).json({
         message: "Body recibido correctamente",
-        body: req.body
+        body: req.body,
     });
 });
 app.get("/api/debug/params/:id", (req, res) => {
     res.status(200).json({
         message: "Params recibidos correctamente",
-        params: req.params
+        params: req.params,
     });
 });
 app.get("/api/debug/query", (req, res) => {
     res.status(200).json({
         message: "Query params recibidos correctamente",
-        query: req.query
+        query: req.query,
     });
 });
 app.get("/api/debug/headers", (req, res) => {
     res.status(200).json({
         message: "Headers recibidos correctamente",
-        headers: req.headers
+        headers: req.headers,
     });
 });
 app.patch("/api/debug/users/:id", (req, res) => {
@@ -254,7 +279,7 @@ app.patch("/api/debug/users/:id", (req, res) => {
         id,
         notify,
         authorization,
-        changes
+        changes,
     });
 });
 app.post("/api/debug/request", (req, res) => {
@@ -265,7 +290,7 @@ app.post("/api/debug/request", (req, res) => {
         params: req.params,
         query: req.query,
         headers: req.headers,
-        body: req.body
+        body: req.body,
     });
 });
 app.listen(PORT, () => {

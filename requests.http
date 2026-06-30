@@ -275,3 +275,232 @@ GET {{baseUrl}}/api/users
 
 ### Dia 11 - Comprobar listado de usuarios activos
 GET {{baseUrl}}/api/users/active
+
+### Dia 12 - Crear usuario con nombre vacio
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "",
+  "email": "nuevo@email.com",
+  "password": "123456"
+}
+
+### Dia 12 - Crear usuario con nombre formado solo por espacios
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "   ",
+  "email": "nuevo@email.com",
+  "password": "123456"
+}
+
+### Dia 12 - Crear usuario con email que no es string
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Usuario",
+  "email": true,
+  "password": "123456"
+}
+
+### Dia 12 - Crear usuario con password que no es string
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Usuario",
+  "email": "usuario@email.com",
+  "password": 123456
+}
+
+### Dia 12 - Crear usuario y limpiar nombre y email
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": " Usuario Limpio ",
+  "email": " USUARIO@EMAIL.COM ",
+  "password": "123456"
+}
+
+### Dia 12 - Actualizar usuario con nombre vacio
+PATCH {{baseUrl}}/api/users/1
+Content-Type: application/json
+
+{
+  "name": ""
+}
+
+### Dia 12 - Actualizar usuario con isActive incorrecto
+PATCH {{baseUrl}}/api/users/1
+Content-Type: application/json
+
+{
+  "isActive": "false"
+}
+
+### Dia 12 - Comprobar los datos limpios despues de crear
+GET {{baseUrl}}/api/users
+
+### Dia 13 - Crear usuario con email normalizado
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Usuario Normalizado",
+  "email": "  USUARIO.NORMALIZADO@EMAIL.COM  ",
+  "password": "123456"
+}
+
+### Dia 13 - Crear usuario con email duplicado en mayusculas
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Usuario Repetido",
+  "email": "USUARIO.NORMALIZADO@EMAIL.COM",
+  "password": "123456"
+}
+
+### Dia 13 - Crear usuario con email sin arroba
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Email Sin Arroba",
+  "email": "usuario.email.com",
+  "password": "123456"
+}
+
+### Dia 13 - Crear usuario con email sin punto
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Email Sin Punto",
+  "email": "usuario@email",
+  "password": "123456"
+}
+
+### Dia 13 - Actualizar usuario con su mismo email normalizado
+PATCH {{baseUrl}}/api/users/1
+Content-Type: application/json
+
+{
+  "email": "  ANA@EMAIL.COM  "
+}
+
+### Dia 13 - Actualizar usuario con el email de otro usuario
+PATCH {{baseUrl}}/api/users/2
+Content-Type: application/json
+
+{
+  "email": "ANA@EMAIL.COM"
+}
+
+### Dia 13 - Comprobar los emails guardados
+GET {{baseUrl}}/api/users
+
+### Dia 14 - Health responde 200 OK
+GET {{baseUrl}}/api/health
+
+### Dia 14 - Listar usuarios responde 200 OK
+GET {{baseUrl}}/api/users
+
+### Dia 14 - Consultar usuario existente responde 200 OK
+GET {{baseUrl}}/api/users/1
+
+### Dia 14 - Consultar usuario inexistente responde 404 Not Found
+GET {{baseUrl}}/api/users/999
+
+### Dia 14 - Consultar con ID no valido responde 400 Bad Request
+GET {{baseUrl}}/api/users/abc
+
+### Dia 14 - Crear usuario responde 201 Created
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Usuario Estado",
+  "email": "estado@email.com",
+  "password": "123456"
+}
+
+### Dia 14 - Crear con datos incorrectos responde 400 Bad Request
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "",
+  "email": "estado2@email.com",
+  "password": "123456"
+}
+
+### Dia 14 - Crear con email duplicado responde 409 Conflict
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Usuario Repetido",
+  "email": "ESTADO@EMAIL.COM",
+  "password": "123456"
+}
+
+### Dia 14 - Actualizar usuario responde 200 OK
+PATCH {{baseUrl}}/api/users/1
+Content-Type: application/json
+
+{
+  "name": "Ana Codigo 200"
+}
+
+### Dia 14 - Actualizar con ID no valido responde 400 Bad Request
+PATCH {{baseUrl}}/api/users/abc
+Content-Type: application/json
+
+{
+  "name": "Nombre actualizado"
+}
+
+### Dia 14 - Actualizar usuario inexistente responde 404 Not Found
+PATCH {{baseUrl}}/api/users/999
+Content-Type: application/json
+
+{
+  "name": "Usuario inexistente"
+}
+
+### Dia 14 - Actualizar con email duplicado responde 409 Conflict
+PATCH {{baseUrl}}/api/users/2
+Content-Type: application/json
+
+{
+  "email": "ANA@EMAIL.COM"
+}
+
+### Dia 14 - Desactivar usuario responde 200 OK
+DELETE {{baseUrl}}/api/users/1
+
+### Dia 14 - Desactivar con ID no valido responde 400 Bad Request
+DELETE {{baseUrl}}/api/users/abc
+
+### Dia 14 - Desactivar usuario inexistente responde 404 Not Found
+DELETE {{baseUrl}}/api/users/999
+
+### Dia 15 - Consultar usuario existente sin pasar por el middleware de errores
+GET {{baseUrl}}/api/users/1
+
+### Dia 15 - ID no valido gestionado por el middleware
+GET {{baseUrl}}/api/users/abc
+
+### Dia 15 - Usuario inexistente gestionado por el middleware
+GET {{baseUrl}}/api/users/999
+
+### Dia 15 - Ruta inexistente gestionada por el middleware 404
+GET {{baseUrl}}/api/ruta-inventada
+
+### Dia 15 - Error interno de prueba gestionado por el middleware
+GET {{baseUrl}}/api/debug/error

@@ -207,7 +207,19 @@ Posibles errores:
 
 ```json
 {
-  "error": "name, email y password son obligatorios"
+  "error": "El nombre debe ser un texto no vacío"
+}
+```
+
+```json
+{
+  "error": "El email debe ser un texto no vacío"
+}
+```
+
+```json
+{
+  "error": "La contraseña debe ser un texto no vacío"
 }
 ```
 
@@ -293,7 +305,7 @@ Posibles errores:
 
 ```json
 {
-  "error": "El nombre no puede estar vacío"
+  "error": "El nombre debe ser un texto no vacío"
 }
 ```
 
@@ -373,6 +385,151 @@ Posibles errores:
 
 Un ID incorrecto devuelve `400 Bad Request` y un usuario inexistente devuelve
 `404 Not Found`.
+
+## Validaciones básicas
+
+La API valida manualmente los datos antes de crear o actualizar usuarios. De
+este modo, una petición incorrecta devuelve un mensaje claro y no modifica el
+array de usuarios.
+
+Validaciones principales:
+
+- `name` debe ser un texto no vacío.
+- `email` debe ser un texto no vacío y contener `@` y un punto.
+- `password` debe ser un texto no vacío de al menos 6 caracteres.
+- `isActive`, cuando se envía en una actualización, debe ser booleano.
+- `PATCH /api/users/:id` debe recibir al menos un campo modificable.
+
+Antes de guardar un usuario, la API elimina los espacios exteriores de `name`
+y `email`, y normaliza el email a minúsculas. Por ejemplo,
+`" USUARIO@EMAIL.COM "` se almacena como `"usuario@email.com"`.
+
+Ejemplo de error con código `400 Bad Request`:
+
+```json
+{
+  "error": "El nombre debe ser un texto no vacío"
+}
+```
+
+Un email duplicado no es un error de formato y devuelve `409 Conflict`.
+
+## Validación de email y duplicados
+
+La API normaliza los emails antes de validarlos, compararlos o guardarlos. El
+proceso aplica:
+
+- `trim()` para eliminar los espacios exteriores.
+- `toLowerCase()` para convertir el valor a minúsculas.
+- Una validación básica que exige `@` y un punto.
+- Una comprobación de duplicados sobre el email normalizado.
+
+Ejemplo de normalización:
+
+```text
+"  USUARIO@EMAIL.COM  " -> "usuario@email.com"
+```
+
+En `POST /api/users` se comprueba que el email no pertenezca a ningún usuario.
+En `PATCH /api/users/:id` se ignora al usuario que se está editando, de modo que
+puede conservar su propio email, pero no utilizar el de otra cuenta.
+
+Si el formato básico no es válido, la API responde con `400 Bad Request`:
+
+```json
+{
+  "error": "El email no tiene un formato válido"
+}
+```
+
+Si el email normalizado ya está registrado, responde con `409 Conflict`:
+
+```json
+{
+  "error": "El email ya está registrado"
+}
+```
+
+## Códigos de estado utilizados
+
+La API utiliza códigos HTTP para comunicar el resultado de cada petición. El
+código y el cuerpo JSON deben describir siempre la misma situación.
+
+| Código | Significado | Uso en el proyecto |
+| ---: | --- | --- |
+| 200 | OK | Consulta, actualización o desactivación correcta |
+| 201 | Created | Usuario creado correctamente |
+| 400 | Bad Request | ID, body o datos incorrectos |
+| 404 | Not Found | Usuario no encontrado |
+| 409 | Conflict | Email ya registrado |
+
+Ejemplo de error `404 Not Found`:
+
+```json
+{
+  "error": "Usuario no encontrado",
+  "id": 999
+}
+```
+
+Ejemplo de error `409 Conflict`:
+
+```json
+{
+  "error": "El email ya está registrado"
+}
+```
+
+Los códigos `401 Unauthorized` y `403 Forbidden` se utilizarán más adelante al
+incorporar autenticación y permisos. Los errores inesperados del servidor se
+representan con `500 Internal Server Error`.
+
+## Gestión centralizada de errores
+
+La API utiliza la clase `AppError` y un middleware global para devolver los
+errores con un formato común. Las rutas delegan el error mediante
+`next(new AppError(...))` y el middleware construye la respuesta HTTP.
+
+Formato general:
+
+```json
+{
+  "error": "El ID debe ser un número",
+  "statusCode": 400,
+  "details": {
+    "received": "abc"
+  },
+  "path": "/api/users/abc",
+  "method": "GET",
+  "timestamp": "2026-01-01T10:00:00.000Z"
+}
+```
+
+También existe un middleware específico para las rutas que no coinciden con
+ningún endpoint. Por ejemplo:
+
+```http
+GET /api/ruta-inventada
+```
+
+devuelve `404 Not Found` con una respuesta JSON uniforme:
+
+```json
+{
+  "error": "Ruta no encontrada",
+  "statusCode": 404,
+  "details": {
+    "method": "GET",
+    "path": "/api/ruta-inventada"
+  },
+  "path": "/api/ruta-inventada",
+  "method": "GET",
+  "timestamp": "2026-01-01T10:00:00.000Z"
+}
+```
+
+Los middlewares se registran después de todas las rutas: primero el de rutas no
+encontradas y finalmente el middleware global de errores.
 
 ### Rutas temporales de debug
 
@@ -465,3 +622,7 @@ Body de ejemplo:
 - [Día 9 - Crear usuarios en memoria](docs/dia_09_crear_usuarios.md)
 - [Día 10 - Actualizar usuarios en memoria](docs/dia_10_actualizar_usuarios.md)
 - [Día 11 - Eliminar o desactivar usuarios en memoria](docs/dia_11_eliminar_desactivar_usuarios.md)
+- [Día 12 - Validación manual básica](docs/dia_12_validacion_manual_basica.md)
+- [Día 13 - Validación de email y duplicados](docs/dia_13_validacion_email_duplicados.md)
+- [Día 14 - Códigos de estado HTTP](docs/dia_14_codigos_estado_http.md)
+- [Día 15 - Middleware centralizado de errores](docs/dia_15_middleware_errores.md)
