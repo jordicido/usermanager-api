@@ -531,6 +531,120 @@ devuelve `404 Not Found` con una respuesta JSON uniforme:
 Los middlewares se registran después de todas las rutas: primero el de rutas no
 encontradas y finalmente el middleware global de errores.
 
+## Persistencia
+
+Hasta el día 15, la API trabaja con usuarios guardados en un array en memoria.
+Esto permite practicar el CRUD, pero cualquier usuario creado, actualizado o
+desactivado se pierde al reiniciar el servidor.
+
+A partir de esta nueva fase prepararemos una base de datos para conservar los
+usuarios de forma persistente. La tabla principal prevista es `users` y tendrá
+los siguientes campos:
+
+```text
+id
+name
+email
+password_hash
+role
+is_active
+created_at
+updated_at
+```
+
+El cambio de almacenamiento no modificará el contrato público de la API: el
+cliente seguirá utilizando los mismos endpoints y recibiendo respuestas JSON.
+
+## Base de datos con Docker Compose
+
+El proyecto utiliza Docker Compose para levantar PostgreSQL y Adminer en
+contenedores separados.
+
+```text
+postgres  -> Base de datos PostgreSQL (puerto 5432)
+adminer   -> Interfaz web para consultar la base de datos (puerto 8080)
+```
+
+Arrancar los servicios:
+
+```bash
+docker compose up -d
+```
+
+Comprobar su estado:
+
+```bash
+docker compose ps
+```
+
+Parar los servicios sin borrar el volumen de datos:
+
+```bash
+docker compose down
+```
+
+Adminer está disponible en `http://localhost:8080` con estos datos de conexión:
+
+```text
+Sistema: PostgreSQL
+Servidor: postgres
+Usuario: usermanager
+Contraseña: usermanager_password
+Base de datos: usermanager_db
+```
+
+El volumen `postgres_data` conserva la información de PostgreSQL cuando los
+contenedores se detienen o se recrean. El comando `docker compose down -v`
+también elimina el volumen y debe utilizarse con cuidado.
+
+## Modelo persistente User
+
+El modelo principal del proyecto será `User`. Sus campos previstos son:
+
+```text
+id
+name
+email
+passwordHash
+role
+isActive
+createdAt
+updatedAt
+```
+
+Reglas importantes del modelo:
+
+- `email` será único y se guardará normalizado.
+- La contraseña se transformará en `passwordHash` antes de persistirla.
+- `passwordHash` nunca se devolverá al cliente.
+- `role` tendrá `USER` como valor predeterminado.
+- `isActive` tendrá `true` como valor predeterminado.
+- `createdAt` y `updatedAt` se gestionarán automáticamente.
+
+Este diseño conceptual servirá como base para crear más adelante el modelo
+Prisma y su tabla en PostgreSQL.
+
+## ORM y acceso a datos
+
+El proyecto usará Prisma como ORM principal para comunicarse con PostgreSQL.
+Se ha elegido porque:
+
+- Encaja bien con TypeScript y genera un cliente tipado.
+- Permite definir modelos de datos de forma clara.
+- Incluye un sistema de migraciones.
+- Reduce el SQL repetitivo de las operaciones habituales.
+- Permite explorar los datos mediante Prisma Studio.
+
+El flujo previsto para el acceso a datos es:
+
+```text
+API Express -> Repository -> Prisma -> PostgreSQL
+```
+
+SQL directo, TypeORM y Sequelize se han considerado como alternativas, pero no
+serán el camino principal del reto. Prisma se instalará y configurará en la
+siguiente fase.
+
 ### Rutas temporales de debug
 
 Rutas creadas para practicar cómo leer datos de una petición HTTP desde
@@ -626,3 +740,7 @@ Body de ejemplo:
 - [Día 13 - Validación de email y duplicados](docs/dia_13_validacion_email_duplicados.md)
 - [Día 14 - Códigos de estado HTTP](docs/dia_14_codigos_estado_http.md)
 - [Día 15 - Middleware centralizado de errores](docs/dia_15_middleware_errores.md)
+- [Día 16 - Base de datos y persistencia](docs/dia_16_base_datos_persistencia.md)
+- [Día 17 - PostgreSQL con Docker Compose](docs/dia_17_postgresql_docker_compose.md)
+- [Día 18 - Diseño del modelo persistente User](docs/dia_18_diseno_modelo_persistente_user.md)
+- [Día 19 - ORM o acceso a datos](docs/dia_19_orm_acceso_datos.md)
