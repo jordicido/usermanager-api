@@ -645,6 +645,151 @@ SQL directo, TypeORM y Sequelize se han considerado como alternativas, pero no
 serán el camino principal del reto. Prisma se instalará y configurará en la
 siguiente fase.
 
+## Configuración inicial de Prisma
+
+Prisma ya está instalado como ORM del proyecto.
+
+Dependencias principales:
+
+```text
+@prisma/client
+prisma
+```
+
+Scripts útiles:
+
+```bash
+npm run prisma:validate
+npm run prisma:generate
+npm run prisma:studio
+```
+
+Archivos importantes:
+
+```text
+prisma/schema.prisma
+prisma.config.ts
+.env
+.env.example
+```
+
+En la configuración actual, `schema.prisma` define el generador del cliente y
+el proveedor PostgreSQL. La URL de conexión se lee desde `DATABASE_URL` mediante
+`prisma.config.ts`.
+
+La carpeta `prisma/` queda preparada para añadir el modelo `User` y crear la
+primera migración en la siguiente fase.
+
+## Modelo Prisma User
+
+El modelo principal del proyecto ya está definido en `prisma/schema.prisma`.
+
+```prisma
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+```
+
+Reglas principales:
+
+```text
+email único
+passwordHash obligatorio
+role por defecto USER
+isActive por defecto true
+createdAt automático
+updatedAt automático al modificar
+```
+
+Este modelo traduce el diseño persistente del Día 18 a sintaxis de Prisma.
+Todavía no crea la tabla en PostgreSQL: la migración se realizará en la
+siguiente fase.
+
+## Migraciones con Prisma
+
+El proyecto usa Prisma Migrate para versionar la estructura de PostgreSQL.
+
+Primera migración:
+
+```bash
+npx prisma migrate dev --name init_user
+```
+
+También puede ejecutarse mediante el script del proyecto:
+
+```bash
+npm run prisma:migrate -- --name init_user
+```
+
+Esto ha generado:
+
+```text
+prisma/migrations/20260708053452_init_user/migration.sql
+```
+
+La migración crea en PostgreSQL:
+
+```text
+Role
+User
+_prisma_migrations
+```
+
+`Role` es el enum con los valores `USER` y `ADMIN`.
+
+La tabla `User` almacena los usuarios de la aplicación.
+
+La tabla `_prisma_migrations` guarda el historial interno de migraciones de
+Prisma y no debe editarse manualmente.
+
+## Prisma Studio
+
+Prisma Studio permite explorar visualmente los datos de PostgreSQL desde el
+modelo de Prisma.
+
+Comando:
+
+```bash
+npx prisma studio
+```
+
+O mediante script:
+
+```bash
+npm run prisma:studio
+```
+
+URL habitual:
+
+```text
+http://localhost:5555
+```
+
+Uso en el proyecto:
+
+```text
+Comprobar tablas.
+Revisar usuarios.
+Ver datos iniciales del seed.
+Comprobar cambios realizados desde la API.
+Detectar errores de persistencia.
+```
+
+Prisma Studio es una herramienta de desarrollo. La gestión real de usuarios se
+hará desde la API.
+
 ### Rutas temporales de debug
 
 Rutas creadas para practicar cómo leer datos de una petición HTTP desde
@@ -744,3 +889,7 @@ Body de ejemplo:
 - [Día 17 - PostgreSQL con Docker Compose](docs/dia_17_postgresql_docker_compose.md)
 - [Día 18 - Diseño del modelo persistente User](docs/dia_18_diseno_modelo_persistente_user.md)
 - [Día 19 - ORM o acceso a datos](docs/dia_19_orm_acceso_datos.md)
+- [Día 20 - Instalación y configuración inicial de Prisma](docs/dia_20_instalacion_configuracion_prisma.md)
+- [Día 21 - Modelo Prisma User](docs/dia_21_modelo_prisma_user.md)
+- [Día 22 - Primera migración con Prisma](docs/dia_22_primera_migracion_prisma.md)
+- [Día 23 - Prisma Studio](docs/dia_23_prisma_studio.md)
